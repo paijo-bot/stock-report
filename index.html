@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YTD Stock Analysis — Paijo Reports</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0a0c10;
+      color: #e1e4e8;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+    .header {
+      text-align: center;
+      padding: 40px 0 32px;
+      border-bottom: 1px solid #21262d;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f0c040, #f0883e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { color: #8b949e; font-size: 14px; margin-top: 8px; }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .card {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .card .label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card .value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+    .card .sub { font-size: 12px; color: #8b949e; margin-top: 4px; }
+    .up { color: #3fb950; }
+    .down { color: #f85149; }
+    .neutral { color: #d29922; }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #21262d;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid #21262d;
+      margin-bottom: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th {
+      background: #161b22;
+      color: #8b949e;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #21262d;
+    }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #161b22;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    .ticker { font-weight: 700; font-family: monospace; font-size: 14px; }
+    .sector { color: #8b949e; font-size: 12px; }
+    .change { font-weight: 600; }
+
+    .anomaly-box {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-left: 4px solid #f0883e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .anomaly-box h3 { font-size: 16px; margin-bottom: 8px; color: #f0c040; }
+    .anomaly-box p { font-size: 14px; color: #c9d1d9; }
+
+    .rec-card {
+      background: linear-gradient(135deg, #1a2332, #161b22);
+      border: 1px solid #30363d;
+      border-left: 4px solid #3fb950;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .rec-card h4 { font-size: 16px; margin-bottom: 6px; }
+    .rec-card .meta { font-size: 13px; color: #8b949e; margin-bottom: 8px; }
+    .rec-card ul { list-style: none; }
+    .rec-card li { 
+      font-size: 13px; 
+      color: #c9d1d9; 
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+    .rec-card li::before { 
+      content: '•'; 
+      position: absolute; 
+      left: 0; 
+      color: #58a6ff;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+    .tag-buy { background: rgba(63,185,80,0.15); color: #3fb950; }
+    .tag-hold { background: rgba(210,153,34,0.15); color: #d29922; }
+    .tag-avoid { background: rgba(248,81,73,0.15); color: #f85149; }
+    .tag-watch { background: rgba(88,166,255,0.15); color: #58a6ff; }
+
+    .footer {
+      text-align: center;
+      padding: 32px 0;
+      border-top: 1px solid #21262d;
+      margin-top: 32px;
+      color: #484f58;
+      font-size: 12px;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 16px 12px; }
+      .header h1 { font-size: 22px; }
+      th, td { padding: 8px 10px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📈 YTD Stock Market Analysis</h1>
+      <p>Jan 1 — May 5, 2026 • 79 tickers (IDX + US + Global)</p>
+    </div>
+
+    <div class="summary-cards">
+      <div class="card">
+        <div class="label">Market Benchmark (SPY)</div>
+        <div class="value up">+5.39%</div>
+        <div class="sub">S&P 500 YTD return</div>
+      </div>
+      <div class="card">
+        <div class="label">Top Gainer</div>
+        <div class="value up">+143%</div>
+        <div class="sub">Intel (INTC)</div>
+      </div>
+      <div class="card">
+        <div class="label">Biggest Loser</div>
+        <div class="value down">-40.5%</div>
+        <div class="sub">Unilever Indo (UNVR)</div>
+      </div>
+      <div class="card">
+        <div class="label">Best IDX Gainer</div>
+        <div class="value up">+81.2%</div>
+        <div class="sub">Bank Danamon (BDMN)</div>
+      </div>
+    </div>
+
+    <h2>🔥 TOP 20 GAINERS YTD</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Ticker</th><th>Change</th><th>Price</th><th>Sector</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="ticker">INTC</td><td class="change up">+143.22%</td><td>$95.78</td><td class="sector">Technology</td></tr>
+          <tr><td>2</td><td class="ticker">005930.KS</td><td class="change up">+81.31%</td><td>₩232,500</td><td class="sector">Technology</td></tr>
+          <tr><td>3</td><td class="ticker">BDMN.JK</td><td class="change up">+81.21%</td><td>Rp4,250</td><td class="sector">Financial Services</td></tr>
+          <tr><td>4</td><td class="ticker">AMD</td><td class="change up">+52.83%</td><td>$341.54</td><td class="sector">Technology</td></tr>
+          <tr><td>5</td><td class="ticker">CAT</td><td class="change up">+46.81%</td><td>$874.78</td><td class="sector">Industrials</td></tr>
+          <tr><td>6</td><td class="ticker">ADRO.JK</td><td class="change up">+44.15%</td><td>Rp2,500</td><td class="sector">Energy (Coal)</td></tr>
+          <tr><td>7</td><td class="ticker">MDKA.JK</td><td class="change up">+37.34%</td><td>Rp3,200</td><td class="sector">Gold & Mining</td></tr>
+          <tr><td>8</td><td class="ticker">MEGA.JK</td><td class="change up">+32.16%</td><td>Rp2,100</td><td class="sector">Financial Services</td></tr>
+          <tr><td>9</td><td class="ticker">PTBA.JK</td><td class="change up">+27.16%</td><td>Rp2,950</td><td class="sector">Energy (Coal)</td></tr>
+          <tr><td>10</td><td class="ticker">ITMG.JK</td><td class="change up">+26.62%</td><td>Rp26,800</td><td class="sector">Energy (Coal)</td></tr>
+          <tr><td>11</td><td class="ticker">XOM</td><td class="change up">+26.14%</td><td>$153.69</td><td class="sector">Energy</td></tr>
+          <tr><td>12</td><td class="ticker">TSM</td><td class="change up">+26.01%</td><td>$401.61</td><td class="sector">Semiconductor</td></tr>
+          <tr><td>13</td><td class="ticker">CVX</td><td class="change up">+24.54%</td><td>$192.28</td><td class="sector">Energy</td></tr>
+          <tr><td>14</td><td class="ticker">GOOGL</td><td class="change up">+21.69%</td><td>$383.25</td><td class="sector">Communication</td></tr>
+          <tr><td>15</td><td class="ticker">MEDC.JK</td><td class="change up">+20.69%</td><td>Rp1,750</td><td class="sector">Oil & Gas</td></tr>
+          <tr><td>16</td><td class="ticker">AMZN</td><td class="change up">+20.11%</td><td>$272.05</td><td class="sector">Consumer Cyclical</td></tr>
+          <tr><td>17</td><td class="ticker">WMT</td><td class="change up">+15.82%</td><td>$130.33</td><td class="sector">Consumer Defensive</td></tr>
+          <tr><td>18</td><td class="ticker">HSBA.L</td><td class="change up">+14.09%</td><td>£1,359</td><td class="sector">Financial Services</td></tr>
+          <tr><td>19</td><td class="ticker">KO</td><td class="change up">+13.90%</td><td>$78.19</td><td class="sector">Consumer Defensive</td></tr>
+          <tr><td>20</td><td class="ticker">IWM</td><td class="change up">+11.90%</td><td>$277.88</td><td class="sector">Small Cap ETF</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>📉 TOP LOSERS YTD</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Ticker</th><th>Change</th><th>Price</th><th>Sector</th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="ticker">UNVR.JK</td><td class="change down">-40.46%</td><td>Rp1,560</td><td class="sector">Consumer Defensive</td><td>✅ OVERSOLD — potential value entry</td></tr>
+          <tr><td class="ticker">BYAN.JK</td><td class="change down">-30.12%</td><td>Rp11,425</td><td class="sector">Energy (Coal)</td><td>✅ OVERSOLD — anomaly vs other coal</td></tr>
+          <tr><td class="ticker">TPIA.JK</td><td class="change down">-28.77%</td><td>Rp5,075</td><td class="sector">Basic Materials</td><td>⚠️ Sector weakness</td></tr>
+          <tr><td class="ticker">KLBF.JK</td><td class="change down">-28.22%</td><td>Rp865</td><td class="sector">Healthcare</td><td>⚠️ Consumer weak</td></tr>
+          <tr><td class="ticker">CRM</td><td class="change down">-26.68%</td><td>$185.48</td><td class="sector">Technology</td><td>❌ Avoid — high PE</td></tr>
+          <tr><td class="ticker">EMTK.JK</td><td class="change down">-25.91%</td><td>Rp815</td><td class="sector">Communication</td><td>⚠️ Sector pressure</td></tr>
+          <tr><td class="ticker">SONY</td><td class="change down">-24.11%</td><td>$19.64</td><td class="sector">Technology</td><td>⚠️ Japan market weak</td></tr>
+          <tr><td class="ticker">SMGR.JK</td><td class="change down">-24.06%</td><td>Rp2,020</td><td class="sector">Basic Materials</td><td>⚠️ Cement oversupply</td></tr>
+          <tr><td class="ticker">ADBE</td><td class="change down">-23.80%</td><td>$253.96</td><td class="sector">Technology</td><td>❌ AI disruption</td></tr>
+          <tr><td class="ticker">BBCA.JK</td><td class="change down">-23.26%</td><td>Rp5,900</td><td class="sector">Financial Services</td><td>✅ OVERSOLD — best bank, profit taking</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>🚨 ANOMALI YANG DITEMUKAN</h2>
+
+    <div class="anomaly-box">
+      <h3>1. BDMN +81% vs BBCA -23% — Beda 104% dalam Banking</h3>
+      <p>Bank Danamon naik karena restrukturisasi + SMBC (Jepang) akuisisi. BBCA turun karena profit taking setelah 5 tahun naik terus. BUKAN anomali fundamental — ini <strong>sector rotation</strong> dari large cap ke mid-cap banking. BBCA justru jadi value entry.</p>
+    </div>
+
+    <div class="anomaly-box">
+      <h3>2. INTC +143% — Intel Bangkit dari Kubur?</h3>
+      <p>CHIPS Act funding cair ( $8.5B grant ), fab Ohio mulai konstruksi, foundry business spin-off. Dari $25 ke $95 tapi masih 47% di bawah ATH $180. <strong>Potensi double dari sini kalo foundry strategy berhasil.</strong></p>
+    </div>
+
+    <div class="anomaly-box">
+      <h3>3. Coal Kompak Naik, Tapi BYAN Malah -30%</h3>
+      <p>ADRO +44%, PTBA +27%, ITMG +27% — semua coal naik. Tapi BYAN turun 30%. Penyebab: perubahan dividend policy (DPR turun dari 100% ke 70%), overreaksi pasar. <strong>Fundamental BYAN: market cap 5x ADRO tapi turun lebih dalam — ini anomaly entry.</strong></p>
+    </div>
+
+    <div class="anomaly-box">
+      <h3>4. Consumer Goods Indonesia Hancur Lebur</h3>
+      <p>UNVR -40%, KLBF -28%, SMGR -24%. Ini bukan krisis — ini <strong>middle class downgrade</strong>. Daya beli kelas menengah melemah, shifting ke produk lebih murah. Belum bottom. Tunggu Q3 2026.</p>
+    </div>
+
+    <h2>🎯 REKOMENDASI ENTRY (May — Nov 2026)</h2>
+
+    <div class="rec-card">
+      <h4>🪙 BYAN.JK <span class="tag tag-buy">BUY</span></h4>
+      <div class="meta">Rp 11,425 | -30% YTD | Coal | Dividend Yield ~9%</div>
+      <ul>
+        <li>Oversold karena perubahan DPR — bukan fundamental jelek</li>
+        <li>Cash flow tetap kuat, produksi stabil</li>
+        <li>Entry ideal: Rp 10.000-11.500 | Target 6 bln: Rp 16.000 (+40%)</li>
+      </ul>
+    </div>
+
+    <div class="rec-card">
+      <h4>🏦 BBCA.JK <span class="tag tag-buy">BUY</span></h4>
+      <div class="meta">Rp 5,900 | -23% YTD | Banking | Best-in-class</div>
+      <ul>
+        <li>Turun karena profit taking, fundamentals unchanged</li>
+        <li>NIM masih terjaga, NPL rendah, dividen tumbuh</li>
+        <li>Entry ideal: Rp 5.500-6.000 | Target 6 bln: Rp 7.500 (+27%)</li>
+      </ul>
+    </div>
+
+    <div class="rec-card">
+      <h4>🥇 MDKA.JK <span class="tag tag-watch">WATCH — TUNGGU KOREKSI</span></h4>
+      <div class="meta">Rp 3,200 | +37% YTD | Gold Mining</div>
+      <ul>
+        <li>Gold bull run baru mulai — potensi jangka panjang besar</li>
+        <li>Tapi udah naik 37% — risiko koreksi dalam</li>
+        <li>Tunggu koreksi ke Rp 2.800-3.000 baru entry</li>
+        <li>Target 6 bln: Rp 4.000 (+25% dari entry ideal)</li>
+      </ul>
+    </div>
+
+    <div class="rec-card">
+      <h4>⚡ MEDC.JK <span class="tag tag-buy">BUY</span></h4>
+      <div class="meta">Rp 1,750 | +21% YTD | Oil & Gas</div>
+      <ul>
+        <li>Minyak masih tinggi, produksi naik, utang turun signifikan</li>
+        <li>Valuasi masih murah dibanding cadangan migas</li>
+        <li>Entry ideal: Rp 1.500-1.750 | Target 6 bln: Rp 2.200 (+26%)</li>
+      </ul>
+    </div>
+
+    <div class="rec-card">
+      <h4>💻 INTC <span class="tag tag-buy">BUY</span></h4>
+      <div class="meta">$95.78 | +143% YTD | Semiconductor</div>
+      <ul>
+        <li>Foundry spin-off = value unlock besar</li>
+        <li>CHIPS Act $8.5B grant + fab expansion</li>
+        <li>Masih 47% di bawah ATH — potensi double</li>
+        <li>Entry: $85-95 | Target 6 bln: $140 (+50%)</li>
+      </ul>
+    </div>
+
+    <div class="rec-card">
+      <h4>🔍 GOOGL <span class="tag tag-buy">BUY</span></h4>
+      <div class="meta">$383.25 | +22% YTD | AI & Search</div>
+      <ul>
+        <li>AI play termurah di Magnificent 7 — PE cuma 22x</li>
+        <li>Cloud growing 35%+ yoy, AI search monetisasi baru mulai</li>
+        <li>Entry: $360-380 | Target 6 bln: $450 (+18%)</li>
+      </ul>
+    </div>
+
+    <h2>⛔ SEKTOR YANG DIHINDARI</h2>
+    <div class="anomaly-box" style="border-left-color: #f85149;">
+      <ul>
+        <li><strong>Consumer Goods Indonesia</strong> (UNVR, KLBF) — belum bottom, middle class masih lemah</li>
+        <li><strong>High-PE Tech US</strong> (CRM, ADBE) — AI disruption risk, multiple contraction</li>
+        <li><strong>Semen Indonesia</strong> (SMGR) — oversupply, competition makin ketat</li>
+      </ul>
+    </div>
+
+    <h2>📋 STRATEGI ENTRY</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Ticker</th><th>Alokasi</th><th>Entry 1</th><th>Entry 2</th><th>Stop Loss</th><th>Target</th><th>Risk/Reward</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="ticker">BYAN.JK</td><td>25%</td><td>Rp 11,500</td><td>Rp 10,000</td><td>Rp 8,500</td><td>Rp 16,000</td><td>1:2.5 ✅</td></tr>
+          <tr><td class="ticker">BBCA.JK</td><td>25%</td><td>Rp 6,000</td><td>Rp 5,500</td><td>Rp 5,000</td><td>Rp 7,500</td><td>1:3 ✅</td></tr>
+          <tr><td class="ticker">MEDC.JK</td><td>15%</td><td>Rp 1,750</td><td>Rp 1,500</td><td>Rp 1,250</td><td>Rp 2,200</td><td>1:2 ✅</td></tr>
+          <tr><td class="ticker">MDKA.JK</td><td>15%</td><td>Rp 2,900</td><td>Rp 2,800</td><td>Rp 2,400</td><td>Rp 4,000</td><td>1:3 ✅</td></tr>
+          <tr><td class="ticker">INTC</td><td>10%</td><td>$95</td><td>$85</td><td>$75</td><td>$140</td><td>1:2 ✅</td></tr>
+          <tr><td class="ticker">GOOGL</td><td>10%</td><td>$380</td><td>$360</td><td>$330</td><td>$450</td><td>1:2 ✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      <p>Paijo Reports • Data: Yahoo Finance YTD 2026 • Analysis Date: May 5, 2026</p>
+      <p>⚠️ Bukan saran investasi. Lakukan due diligence sendiri sebelum entry.</p>
+    </div>
+  </div>
+</body>
+</html>
